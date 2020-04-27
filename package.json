@@ -1,0 +1,28 @@
+{
+  "name": "goit-nodejs",
+  "version": "1.0.0",
+  "description": "Study of node.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Deemon13/goit-nodeJS.git"
+  },
+  "author": "Dmitriy Fedorenko",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Deemon13/goit-nodeJS/issues"
+  },
+  "homepage": "https://github.com/Deemon13/goit-nodeJS#readme",
+  "devDependencies": {
+    "nodemon": "^2.0.3"
+  },
+  "dependencies": {
+    "uuidv4": "^6.0.7",
+    "yargs": "^15.3.1"
+  }
+}
