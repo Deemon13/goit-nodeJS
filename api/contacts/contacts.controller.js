@@ -2,7 +2,6 @@ import Joi from 'joi';
 import { uuid } from 'uuidv4';
 import fs from 'fs';
 import path from 'path';
-// import contactsDB from '../../db/contacts.json';
 import { NotFound } from '../helpers/error.constructors';
 import { createControllerProxy } from '../helpers/controllerProxy';
 
@@ -24,19 +23,21 @@ async function getById(req, res, next) {
   try {
     const contacts = await fsPromises.readFile(contactsPath, 'utf-8');
     const contactsDB = JSON.parse(contacts);
+
     const { contactId } = req.params;
     const foundContact = getContactFromArray(contactId, contactsDB);
+
     return res.status(200).json(foundContact);
   } catch (err) {
     next(err);
   }
 }
 
-// class ContactController {
 async function addContact(req, res, next) {
   try {
     const contacts = await fsPromises.readFile(contactsPath, 'utf-8');
     const contactsDB = JSON.parse(contacts);
+
     const contactId = uuid();
 
     const newContact = {
@@ -44,6 +45,7 @@ async function addContact(req, res, next) {
       ...req.body,
     };
     contactsDB.push(newContact);
+
     await fsPromises.writeFile(contactsPath, JSON.stringify(contactsDB));
     return res.status(201).json(newContact);
   } catch (err) {
@@ -53,11 +55,17 @@ async function addContact(req, res, next) {
 
 async function updateContact(req, res, next) {
   try {
+    const contacts = await fsPromises.readFile(contactsPath, 'utf-8');
+    const contactsDB = JSON.parse(contacts);
     const { contactId } = req.params;
-    const foundContact = this.getContactFromArray(contactId);
-    const foundContactIndex = this.getContactIndexFromArray(contactId);
+
+    const foundContact = getContactFromArray(contactId, contactsDB);
+    const foundContactIndex = getContactIndexFromArray(contactId, contactsDB);
+
     const updatedContact = { ...foundContact, ...req.body };
     contactsDB[foundContactIndex] = updatedContact;
+
+    await fsPromises.writeFile(contactsPath, JSON.stringify(contactsDB));
     return res.status(200).json(updatedContact);
   } catch (err) {
     next(err);
@@ -69,9 +77,11 @@ async function removeContact(req, res, next) {
     const contacts = await fsPromises.readFile(contactsPath, 'utf-8');
     const contactsDB = JSON.parse(contacts);
     const { contactId } = req.params;
+
     const message = 'contact deleted';
     const foundContactIndex = getContactIndexFromArray(contactId, contactsDB);
     contactsDB.splice(foundContactIndex, 1);
+
     await fsPromises.writeFile(contactsPath, JSON.stringify(contactsDB));
     return res.status(200).json({ message });
   } catch (err) {
@@ -110,14 +120,8 @@ function validateAddContact(req, res, next) {
 }
 
 function validateUpdateContact(req, res, next) {
-  const contactRules = Joi.object({
-    name: Joi.string(),
-    email: Joi.string(),
-    phone: Joi.string(),
-  });
-  const validationResult = Joi.validate(req.body, contactRules);
-  const message = 'missing required name field';
-  if (validationResult.error) {
+  const message = 'missing fields';
+  if (!Object.keys(req.body).length) {
     return res.status(400).json({ message });
   }
   next();
@@ -132,13 +136,3 @@ export const contactController = createControllerProxy({
   validateUpdateContact,
   updateContact,
 });
-
-// module.exports = {
-//   listContacts,
-//   getById,
-//   addContact,
-//   updateContact,
-//   removeContact,
-//   validateAddContact,
-//   validateUpdateContact,
-// };
