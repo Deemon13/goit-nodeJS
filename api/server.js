@@ -29,6 +29,8 @@ export class CrudServer {
     this.server.use(morgan('tiny'));
   }
 
+  initDatabase() {}
+
   initRoutes() {
     this.server.use('/contacts', contactsRouter);
   }
@@ -40,8 +42,6 @@ export class CrudServer {
       return res.status(err.status).send(`message: ${err.message}`);
     });
   }
-
-  initDatabase() {}
 
   startListening() {
     this.server.listen(PORT, () => {
