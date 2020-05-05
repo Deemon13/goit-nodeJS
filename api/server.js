@@ -13,9 +13,9 @@ export class CrudServer {
   start() {
     this.initServer();
     this.initMiddleware();
+    this.initDatabase();
     this.initRoutes();
     this.handleErrors();
-    this.initDatabase();
     this.startListening();
   }
 
