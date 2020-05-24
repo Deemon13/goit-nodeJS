@@ -1,19 +1,15 @@
 import Joi from 'joi';
-import { uuid } from 'uuidv4';
-import fs from 'fs';
-import path from 'path';
+import { contactModel } from './contacts.model';
 import { NotFound } from '../helpers/error.constructors';
 import { createControllerProxy } from '../helpers/controllerProxy';
 
-const contactsPath = path.join(__dirname, '../../db/contacts.json');
-
-const { promises: fsPromises } = fs;
-
 async function listContacts(req, res, next) {
   try {
-    const contacts = await fsPromises.readFile(contactsPath, 'utf-8');
-    const contactsDB = JSON.parse(contacts);
-    return res.status(200).send(contactsDB);
+    const contacts = await contactModel.findAllContacts();
+
+    // console.log(contacts);
+
+    return res.status(200).send(contacts);
   } catch (err) {
     next(err);
   }
@@ -21,11 +17,8 @@ async function listContacts(req, res, next) {
 
 async function getById(req, res, next) {
   try {
-    const contacts = await fsPromises.readFile(contactsPath, 'utf-8');
-    const contactsDB = JSON.parse(contacts);
-
-    const { contactId } = req.params;
-    const foundContact = getContactFromArray(contactId, contactsDB);
+    const { id } = req.params;
+    const foundContact = await this.getContactByIdOrThrow(id);
 
     return res.status(200).json(foundContact);
   } catch (err) {
@@ -35,18 +28,8 @@ async function getById(req, res, next) {
 
 async function addContact(req, res, next) {
   try {
-    const contacts = await fsPromises.readFile(contactsPath, 'utf-8');
-    const contactsDB = JSON.parse(contacts);
+    const newContact = await contactModel.createContact(req.body);
 
-    const contactId = uuid();
-
-    const newContact = {
-      contactId,
-      ...req.body,
-    };
-    contactsDB.push(newContact);
-
-    await fsPromises.writeFile(contactsPath, JSON.stringify(contactsDB));
     return res.status(201).json(newContact);
   } catch (err) {
     next(err);
@@ -55,18 +38,12 @@ async function addContact(req, res, next) {
 
 async function updateContact(req, res, next) {
   try {
-    const contacts = await fsPromises.readFile(contactsPath, 'utf-8');
-    const contactsDB = JSON.parse(contacts);
-    const { contactId } = req.params;
+    const { id } = req.params;
+    await this.getContactByIdOrThrow(id);
 
-    const foundContact = getContactFromArray(contactId, contactsDB);
-    const foundContactIndex = getContactIndexFromArray(contactId, contactsDB);
+    const updatedContact = contactModel.updateContactById(id, req.body);
 
-    const updatedContact = { ...foundContact, ...req.body };
-    contactsDB[foundContactIndex] = updatedContact;
-
-    await fsPromises.writeFile(contactsPath, JSON.stringify(contactsDB));
-    return res.status(200).json(updatedContact);
+    return res.status(200).json(updatedContact.value);
   } catch (err) {
     next(err);
   }
@@ -74,35 +51,22 @@ async function updateContact(req, res, next) {
 
 async function removeContact(req, res, next) {
   try {
-    const contacts = await fsPromises.readFile(contactsPath, 'utf-8');
-    const contactsDB = JSON.parse(contacts);
-    const { contactId } = req.params;
+    const { id } = req.params;
+    await this.getContactByIdOrThrow(id);
 
-    const message = 'contact deleted';
-    const foundContactIndex = getContactIndexFromArray(contactId, contactsDB);
-    contactsDB.splice(foundContactIndex, 1);
-
-    await fsPromises.writeFile(contactsPath, JSON.stringify(contactsDB));
+    await contactModel.removeContactById(id);
     return res.status(200).json({ message });
   } catch (err) {
     next(err);
   }
 }
 
-function getContactFromArray(foundContactId, db) {
-  const foundContact = db.find(item => item.contactId === foundContactId);
+async function getContactByIdOrThrow(contactId) {
+  const contactFound = await contactModel.findContactById(contactId);
   if (!foundContact) {
     throw new NotFound('Not found');
   }
-  return foundContact;
-}
-
-function getContactIndexFromArray(foundContactId, db) {
-  const foundContact = db.findIndex(item => item.contactId === foundContactId);
-  if (foundContact === -1) {
-    throw new NotFound('Not found');
-  }
-  return foundContact;
+  return contactFound;
 }
 
 function validateAddContact(req, res, next) {
@@ -136,3 +100,13 @@ export const contactController = createControllerProxy({
   validateUpdateContact,
   updateContact,
 });
+
+// export const contactController = {
+//   listContacts,
+//   getById,
+//   validateAddContact,
+//   addContact,
+//   removeContact,
+//   validateUpdateContact,
+//   updateContact,
+// };
