@@ -1,67 +1,6 @@
-// const { MongoClient, ObjectId } = require('mongodb');
 import mongoose, { Schema } from 'mongoose';
 
-// class ContactModel {
-//   constructor() {
-//     // this.contacts = null;
-//   }
-
-//   async createContact(contactParams) {
-//     await getContactsCollection();
-
-//     const insertResult = await this.contacts.insertOne(contactParams);
-
-//     return this.contacts.findOne({
-//       _id: new ObjectId(insertResult.insertedId),
-//     });
-//   }
-
-//   async findAllContacts() {
-//     await getContactsCollection();
-//     return this.contacts.find().toArray();
-//   }
-
-//   async findContactById(id) {
-//     await getContactsCollection();
-//     if (!ObjectId.isValid(id)) {
-//       return null;
-//     }
-//     return this.contacts.findOne({ _id: new ObjectId(id) });
-//   }
-
-//   async updateContactById(id) {
-//     await getContactsCollection();
-//     if (!ObjectId.isValid(id)) {
-//       return null;
-//     }
-//     return this.contacts.findOneAndUpdate(
-//       { _id: new ObjectId(id) },
-//       { $set: contactParams },
-//       { new: true },
-//     );
-//   }
-
-//   async removeContactById(id) {
-//     await getContactsCollection();
-//     if (!ObjectId.isValid(id)) {
-//       return null;
-//     }
-//     return this.contacts.deleteOne({ _id: new ObjectId(id) });
-//   }
-
-//   async getContactsCollection() {
-//     if (this.contacts) {
-//       return;
-//     }
-
-//     const client = await MongoClient(process.env.MONGODB_DB_URL);
-//     const db = client.db(process.env.MONGODB_DB_NAME);
-
-//     this.contacts = await db.createCollection('contacts');
-//   }
-// }
-
-// export const contactModel = new ContactModel();
+const { ObjectId } = mongoose.Types;
 
 const contactSchema = new Schema({
   name: { type: String, required: true },
@@ -69,4 +8,39 @@ const contactSchema = new Schema({
   phone: { type: String, required: true },
 });
 
-const contactModel = mongoose.model('Contact', contactSchema);
+contactSchema.statics.findAllContacts = findAllContacts;
+contactSchema.statics.findContactById = findContactById;
+contactSchema.statics.createContact = createContact;
+contactSchema.statics.updateContactById = updateContactById;
+contactSchema.statics.removeContactById = removeContactById;
+
+async function findAllContacts() {
+  return this.find();
+}
+
+async function findContactById(id) {
+  if (!ObjectId.isValid(id)) {
+    return null;
+  }
+  return this.findById(id);
+}
+
+async function createContact(contactParams) {
+  return this.create(contactParams);
+}
+
+async function updateContactById(id, contactParams) {
+  if (!ObjectId.isValid(id)) {
+    return null;
+  }
+  return this.findByIdAndUpdate(id, { $set: contactParams }, { new: true });
+}
+
+async function removeContactById(id) {
+  if (!ObjectId.isValid(id)) {
+    return null;
+  }
+  return this.findByIdAndDelete(id);
+}
+
+export const contactModel = mongoose.model('Contact', contactSchema);

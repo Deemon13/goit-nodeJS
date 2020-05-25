@@ -7,9 +7,7 @@ async function listContacts(req, res, next) {
   try {
     const contacts = await contactModel.findAllContacts();
 
-    // console.log(contacts);
-
-    return res.status(200).send(contacts);
+    return res.status(200).json(contacts);
   } catch (err) {
     next(err);
   }
@@ -17,10 +15,10 @@ async function listContacts(req, res, next) {
 
 async function getById(req, res, next) {
   try {
-    const { id } = req.params;
-    const foundContact = await this.getContactByIdOrThrow(id);
+    const { contactId } = req.params;
+    const foundContact = await this.getContactByIdOrThrow(contactId);
 
-    return res.status(200).json(foundContact);
+    return res.status(200).send(foundContact);
   } catch (err) {
     next(err);
   }
@@ -38,10 +36,10 @@ async function addContact(req, res, next) {
 
 async function updateContact(req, res, next) {
   try {
-    const { id } = req.params;
-    await this.getContactByIdOrThrow(id);
+    const { contactId } = req.params;
+    await this.getContactByIdOrThrow(contactId);
 
-    const updatedContact = contactModel.updateContactById(id, req.body);
+    const updatedContact = contactModel.updateContactById(contactId, req.body);
 
     return res.status(200).json(updatedContact.value);
   } catch (err) {
@@ -51,19 +49,20 @@ async function updateContact(req, res, next) {
 
 async function removeContact(req, res, next) {
   try {
-    const { id } = req.params;
-    await this.getContactByIdOrThrow(id);
+    const { contactId } = req.params;
+    await this.getContactByIdOrThrow(contactId);
 
-    await contactModel.removeContactById(id);
+    await contactModel.removeContactById(contactId);
+    const message = 'contact deleted';
     return res.status(200).json({ message });
   } catch (err) {
     next(err);
   }
 }
 
-async function getContactByIdOrThrow(contactId) {
-  const contactFound = await contactModel.findContactById(contactId);
-  if (!foundContact) {
+async function getContactByIdOrThrow(checkId) {
+  const contactFound = await contactModel.findContactById(checkId);
+  if (!contactFound) {
     throw new NotFound('Not found');
   }
   return contactFound;
@@ -93,6 +92,7 @@ function validateUpdateContact(req, res, next) {
 
 export const contactController = createControllerProxy({
   listContacts,
+  getContactByIdOrThrow,
   getById,
   validateAddContact,
   addContact,
@@ -100,13 +100,3 @@ export const contactController = createControllerProxy({
   validateUpdateContact,
   updateContact,
 });
-
-// export const contactController = {
-//   listContacts,
-//   getById,
-//   validateAddContact,
-//   addContact,
-//   removeContact,
-//   validateUpdateContact,
-//   updateContact,
-// };
