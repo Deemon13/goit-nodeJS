@@ -3,6 +3,7 @@ import morgan from 'morgan';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import { contactsRouter } from './contacts/contacts.router';
+import { authRouter } from './auth/auth.router';
 
 const PORT = 3000;
 
@@ -42,6 +43,7 @@ export class CrudServer {
 
   initRoutes() {
     this.server.use('/contacts', contactsRouter);
+    this.server.use('/auth', authRouter);
   }
 
   handleErrors() {
