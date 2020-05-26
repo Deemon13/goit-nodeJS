@@ -17,3 +17,9 @@ export class ConflictError extends BaseError {
     super('Conflict', message, 409);
   }
 }
+
+export class UnauthorizedError extends BaseError {
+  constructor(message) {
+    super('Unauthorized', message, 401);
+  }
+}
