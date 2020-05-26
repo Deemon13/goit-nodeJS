@@ -1,6 +1,7 @@
 import express from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
+import mongoose from 'mongoose';
 import { contactsRouter } from './contacts/contacts.router';
 
 const PORT = 3000;
@@ -10,10 +11,10 @@ export class CrudServer {
     this.server = null;
   }
 
-  start() {
+  async start() {
     this.initServer();
     this.initMiddleware();
-    this.initDatabase();
+    await this.initDatabase();
     this.initRoutes();
     this.handleErrors();
     this.startListening();
@@ -29,7 +30,15 @@ export class CrudServer {
     this.server.use(morgan('tiny'));
   }
 
-  initDatabase() {}
+  async initDatabase() {
+    try {
+      await mongoose.connect(process.env.MONGODB_DB_URL);
+      console.log('Database connection successful');
+    } catch (err) {
+      console.log('Database connection error', err);
+      process.exit(1);
+    }
+  }
 
   initRoutes() {
     this.server.use('/contacts', contactsRouter);
