@@ -15,6 +15,7 @@ const userSchema = new Schema({
 
 userSchema.statics.findUserByEmail = findUserByEmail;
 userSchema.statics.createUser = createUser;
+userSchema.statics.updateUserById = updateUserById;
 
 async function findUserByEmail(email) {
   return this.findOne({ email });
@@ -22,6 +23,13 @@ async function findUserByEmail(email) {
 
 async function createUser(userParams) {
   return this.create(userParams);
+}
+
+async function updateUserById(id, userParams) {
+  if (!ObjectId.isValid(id)) {
+    return null;
+  }
+  return this.findByIdAndUpdate(id, { $set: userParams }, { new: true });
 }
 
 export const userModel = mongoose.model('User', userSchema);
