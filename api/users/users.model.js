@@ -16,6 +16,7 @@ const userSchema = new Schema({
 userSchema.statics.findUserByEmail = findUserByEmail;
 userSchema.statics.createUser = createUser;
 userSchema.statics.updateUserById = updateUserById;
+userSchema.statics.findUserByToken = findUserByToken;
 
 async function findUserByEmail(email) {
   return this.findOne({ email });
@@ -30,6 +31,10 @@ async function updateUserById(id, userParams) {
     return null;
   }
   return this.findByIdAndUpdate(id, { $set: userParams }, { new: true });
+}
+
+async function findUserByToken(token) {
+  return this.findOne({ token });
 }
 
 export const userModel = mongoose.model('User', userSchema);

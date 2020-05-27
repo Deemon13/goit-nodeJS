@@ -64,8 +64,36 @@ class AuthController {
     }
   }
 
+  async logoutUser(req, res, next) {
+    try {
+      await userModel.updateUserById(req.user._id, { token: null });
+
+      return res.status(204).json();
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async authorize(req, res, next) {
     try {
+      const authHeader = req.headers.authorization || '';
+      const token = authHeader.replace('Bearer ', '');
+
+      try {
+        jwt.verify(token, process.env.JWT_SECRET);
+      } catch (err) {
+        throw new UnauthorizedError('Not authorized - Token is not valid');
+      }
+
+      const user = await userModel.findUserByToken(token);
+      if (!user) {
+        throw new UnauthorizedError('Not authorized - User not found ');
+      }
+
+      req.user = user;
+      req.token = token;
+
+      next();
     } catch (err) {
       next(err);
     }
