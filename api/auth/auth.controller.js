@@ -82,12 +82,12 @@ class AuthController {
       try {
         jwt.verify(token, process.env.JWT_SECRET);
       } catch (err) {
-        throw new UnauthorizedError('Not authorized - Token is not valid');
+        throw new UnauthorizedError('Not authorized. Token is not valid!');
       }
 
       const user = await userModel.findUserByToken(token);
       if (!user) {
-        throw new UnauthorizedError('Not authorized - User not found ');
+        throw new UnauthorizedError('Not authorized. User not found! ');
       }
 
       req.user = user;
