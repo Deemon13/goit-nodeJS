@@ -10,4 +10,10 @@ router.get(
   usersController.getCurrentUser,
 );
 
+router.patch(
+  '/:id',
+  authController.authorize,
+  usersController.updateCurrentUser,
+);
+
 export const usersRouter = router;
