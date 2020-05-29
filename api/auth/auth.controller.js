@@ -15,7 +15,7 @@ class AuthController {
 
   async registerUser(req, res, next) {
     try {
-      const { email, password } = req.body;
+      const { email, password, subscription } = req.body;
 
       const existingUser = await userModel.findUserByEmail(email);
       if (existingUser) {
@@ -26,6 +26,7 @@ class AuthController {
       const createdUser = await userModel.createUser({
         email,
         password: passwordHash,
+        subscription,
       });
 
       return res.status(201).json({

@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import mongoosePaginate from 'mongoose-paginate-v2';
 
 const { ObjectId } = mongoose.Types;
 
@@ -8,14 +9,21 @@ const contactSchema = new Schema({
   phone: { type: String, required: true },
 });
 
+contactSchema.plugin(mongoosePaginate);
+
 contactSchema.statics.findAllContacts = findAllContacts;
+contactSchema.statics.findAllContactsBySubscription = findAllContactsBySubscription;
 contactSchema.statics.findContactById = findContactById;
 contactSchema.statics.createContact = createContact;
 contactSchema.statics.updateContactById = updateContactById;
 contactSchema.statics.removeContactById = removeContactById;
 
-async function findAllContacts() {
-  return this.find();
+async function findAllContacts(page, limit) {
+  return this.paginate({}, { page: page, limit: limit });
+}
+
+async function findAllContactsBySubscription(subscription) {
+  return this.find({ subscription });
 }
 
 async function findContactById(id) {

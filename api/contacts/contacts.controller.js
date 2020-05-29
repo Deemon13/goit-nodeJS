@@ -5,8 +5,17 @@ import { createControllerProxy } from '../helpers/controllerProxy';
 
 async function listContacts(req, res, next) {
   try {
-    const contacts = await contactModel.findAllContacts();
-
+    const filterQuery = req.query.sub;
+    console.log('filterQuery:', filterQuery);
+    const pageQuery = Number(req.query.page);
+    const limitQuery = Number(req.query.limit);
+    const contacts = await contactModel.findAllContacts(pageQuery, limitQuery);
+    if (filterQuery) {
+      const foundContacts = await contacts.filter(
+        ({ subscription }) => subscription === filterQuery,
+      );
+      return res.status(200).json(foundContacts);
+    }
     return res.status(200).json(contacts);
   } catch (err) {
     next(err);
@@ -92,6 +101,7 @@ function validateUpdateContact(req, res, next) {
 
 export const contactController = createControllerProxy({
   listContacts,
+  // listContactsBySub,
   getContactByIdOrThrow,
   getById,
   validateAddContact,
