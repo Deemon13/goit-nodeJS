@@ -12,7 +12,7 @@ const contactSchema = new Schema({
 contactSchema.plugin(mongoosePaginate);
 
 contactSchema.statics.findAllContacts = findAllContacts;
-contactSchema.statics.findAllContactsBySubscription = findAllContactsBySubscription;
+contactSchema.statics.findContactsBySubscription = findContactsBySubscription;
 contactSchema.statics.findContactById = findContactById;
 contactSchema.statics.createContact = createContact;
 contactSchema.statics.updateContactById = updateContactById;
@@ -22,7 +22,7 @@ async function findAllContacts(page, limit) {
   return this.paginate({}, { page: page, limit: limit });
 }
 
-async function findAllContactsBySubscription(subscription) {
+async function findContactsBySubscription(subscription) {
   return this.find({ subscription });
 }
 

@@ -11,8 +11,8 @@ async function listContacts(req, res, next) {
     const limitQuery = Number(req.query.limit);
     const contacts = await contactModel.findAllContacts(pageQuery, limitQuery);
     if (filterQuery) {
-      const foundContacts = await contacts.filter(
-        ({ subscription }) => subscription === filterQuery,
+      const foundContacts = await contactModel.findContactsBySubscription(
+        filterQuery,
       );
       return res.status(200).json(foundContacts);
     }
@@ -101,7 +101,6 @@ function validateUpdateContact(req, res, next) {
 
 export const contactController = createControllerProxy({
   listContacts,
-  // listContactsBySub,
   getContactByIdOrThrow,
   getById,
   validateAddContact,
