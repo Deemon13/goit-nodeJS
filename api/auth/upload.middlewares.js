@@ -27,7 +27,7 @@ export async function compressImage(req, res, next) {
   const UNCOMPRESSED_IMAGES_FOLDER = process.env.UNCOMPRESSED_IMAGES_FOLDER; //tmp
 
   await imagemin([`${UNCOMPRESSED_IMAGES_FOLDER}/${filename}`], {
-    destination: COMPRESSING_DESTINATION,
+    destination: COMPRESSING_DESTINATING,
     plugins: [imageminJpegtran(), imageminPngquant({ quality: [0.6, 0.8] })],
   });
 

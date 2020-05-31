@@ -12,17 +12,17 @@ router.get(
 );
 
 router.patch(
-  '/:id',
+  '/avatars',
+  upload.single('avatar'),
   authController.authorize,
-  usersController.updateCurrentUser,
+  compressImage,
+  usersController.updateUserAvatar,
 );
 
 router.patch(
-  '/avatars',
+  '/:id',
   authController.authorize,
-  upload.single('avatar'),
-  compressImage,
-  usersController.updateUserAvatar,
+  usersController.updateCurrentUser,
 );
 
 export const usersRouter = router;
