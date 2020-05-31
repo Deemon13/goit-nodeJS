@@ -23,14 +23,22 @@ class AuthController {
       }
 
       const passwordHash = await this.hashPassword(password);
+
+      const avatarURL = `${process.env.SERVER_URL}/${process.env.COMPRESSED_IMAGES_BASE_URL}/${req.file}`;
+
       const createdUser = await userModel.createUser({
         email,
         password: passwordHash,
         subscription,
+        avatarURL,
       });
+
+      const token = this.createToken(createdUser._id);
+      await userModel.updateUserById(createdUser._id, { token });
 
       return res.status(201).json({
         user: this.composeUserForResponse(createdUser),
+        token,
       });
     } catch (err) {
       next(err);

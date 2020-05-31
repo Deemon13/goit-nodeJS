@@ -48,6 +48,36 @@ class UsersController {
     }
   }
 
+  async updateUserAvatar() {
+    if (!req.file && !req.file.fieldname === 'avatar') {
+      const message = 'No avatar!';
+      return res.status(400).json({ message });
+    }
+    try {
+      const user = await userModel.findUserByToken(req.token);
+      if (!user) {
+        throw new UnauthorizedError('Not authorized. User not found! ');
+      }
+
+      const avatarURL = `${process.env.SERVER_URL}${process.env.COMPRESSED_IMAGES_BASE_URL}/${req.file.filename}`;
+
+      await fsPromises.unlink(
+        `${process.env.COMPRESSED_IMAGES_FOLDER}/${user.avatarURL.replace(
+          `${process.env.SERVER_URL}${process.env.COMPRESSED_IMAGES_BASE_URL}`,
+          '',
+        )}`,
+      );
+
+      await userModel.updateUserById(user._id, {
+        avatarURL,
+      });
+
+      return res.status(200).json({ avatarURL });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   composeUserForResponse(user) {
     return {
       email: user.email,
