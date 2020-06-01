@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import { authController } from './auth.controller';
+import { generateAvatarIcon } from './upload.middlewares';
 
 const router = Router();
 
 router.post(
   '/register',
   authController.validateRegisterUser,
+  generateAvatarIcon,
   authController.registerUser,
 );
 

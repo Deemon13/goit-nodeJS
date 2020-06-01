@@ -1,3 +1,4 @@
+import { promises as fsPromises } from 'fs';
 import { createControllerProxy } from '../helpers/controllerProxy';
 import { userModel } from './users.model';
 import { UnauthorizedError } from '../helpers/error.constructors';
@@ -43,6 +44,25 @@ class UsersController {
       return res.status(200).json({
         user: this.composeUserForResponse(updateContact),
       });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async updateUserAvatar(req, res, next) {
+    if (!req.file && !req.file.fieldname === 'avatar') {
+      const message = 'No avatar!';
+      return res.status(400).json({ message });
+    }
+    try {
+      const { _id } = req.user;
+      const avatarURL = `${process.env.SERVER_URL}/${process.env.COMPRESSED_IMAGES_BASE_URL}/${req.file.filename}`;
+      const user = await userModel.updateUserParams(_id, avatarURL);
+      if (!user) {
+        throw new UnauthorizedError('Not authorized. User not found! ');
+      }
+
+      return res.status(200).json({ avatarURL: user.avatarURL });
     } catch (err) {
       next(err);
     }

@@ -6,7 +6,7 @@ import { contactsRouter } from './contacts/contacts.router';
 import { authRouter } from './auth/auth.router';
 import { usersRouter } from './users/users.router';
 
-const PORT = 3000;
+const PORT = process.env.PORT;
 
 export class CrudServer {
   constructor() {
@@ -27,8 +27,9 @@ export class CrudServer {
   }
 
   initMiddleware() {
+    this.server.use(express.static(process.env.STATIC_FILES_PATH));
     this.server.use(express.json());
-    this.server.use(cors({ origin: 'http://localhost:3000' }));
+    this.server.use(cors({ origin: process.env.SERVER_URL }));
     this.server.use(morgan('tiny'));
   }
 
