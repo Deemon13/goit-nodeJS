@@ -1,11 +1,13 @@
 import Joi from 'joi';
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
 import { createControllerProxy } from '../helpers/controllerProxy';
 import { userModel } from '../users/users.model';
 import {
   ConflictError,
   UnauthorizedError,
+  NotFound,
 } from '../helpers/error.constructors';
 
 class AuthController {
@@ -33,6 +35,8 @@ class AuthController {
         avatarURL,
       });
 
+      this.sendVerificationEmail(createdUser);
+
       const token = this.createToken(createdUser._id);
       await userModel.updateUserById(createdUser._id, { token });
 
@@ -40,6 +44,26 @@ class AuthController {
         user: this.composeUserForResponse(createdUser),
         token,
       });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async verifyUser(req, res, next) {
+    try {
+      const { verificationToken } = req.params;
+
+      const userToVerify = await userModel.findUserByVerificationToken(
+        verificationToken,
+      );
+
+      if (!userToVerify) {
+        throw new NotFound('Not found');
+      }
+
+      await userModel.verifyUser(verificationToken);
+
+      return res.status(200).send('User successfully verified');
     } catch (err) {
       next(err);
     }
@@ -140,6 +164,21 @@ class AuthController {
 
   async comparePasswordsHash(password, passwordHash) {
     return bcryptjs.compare(password, passwordHash);
+  }
+
+  async sendVerificationEmail(userEmail, verificationToken) {
+    const verificationLink = `${process.env.SERVER_URL}/auth/verify/${verificationToken}`;
+    const transport = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.MAIL_LOGIN, pass: process.env.MAIL_PASSWORD },
+    });
+
+    const result = await transport.sendMail({
+      from: `${process.env.MAIL_LOGIN}@gmail.com`,
+      to: userEmail,
+      subject: 'Please, verify your email!',
+      html: `<a href="${verificationLink}">Verify email</a>`,
+    });
   }
 
   createToken(uid) {
