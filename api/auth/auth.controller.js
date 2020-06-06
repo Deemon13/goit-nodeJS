@@ -1,16 +1,19 @@
 import Joi from 'joi';
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import sgMail from '@sendgrid/mail';
 import { createControllerProxy } from '../helpers/controllerProxy';
-import { userModel } from '../users/users.model';
+import { userModel, USER_STATUSES } from '../users/users.model';
 import {
   ConflictError,
   UnauthorizedError,
+  NotFound,
 } from '../helpers/error.constructors';
 
 class AuthController {
   constructor() {
     this._saltRounds = 5;
+    sgMail.setApiKey(process.env.SEND_GRID_API_KEY);
   }
 
   async registerUser(req, res, next) {
@@ -33,6 +36,8 @@ class AuthController {
         avatarURL,
       });
 
+      await this.sendVerificationEmail(createdUser);
+
       const token = this.createToken(createdUser._id);
       await userModel.updateUserById(createdUser._id, { token });
 
@@ -45,6 +50,26 @@ class AuthController {
     }
   }
 
+  async verifyUser(req, res, next) {
+    try {
+      const { verificationToken } = req.params;
+
+      const userToVerify = await userModel.findUserByVerificationToken(
+        verificationToken,
+      );
+
+      if (!userToVerify) {
+        throw new NotFound('Not found');
+      }
+
+      await userModel.verifyUser(verificationToken);
+
+      return res.status(200).send('User successfully verified');
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async loginUser(req, res, next) {
     try {
       const { email, password } = req.body;
@@ -52,6 +77,11 @@ class AuthController {
       if (!existingUser) {
         throw new UnauthorizedError('Email is wrong');
       }
+
+      if (existingUser.status !== USER_STATUSES.ACTIVE) {
+        throw new UnauthorizedError('User not verified');
+      }
+
       const isPasswordCorrect = await this.comparePasswordsHash(
         password,
         existingUser.password,
@@ -140,6 +170,17 @@ class AuthController {
 
   async comparePasswordsHash(password, passwordHash) {
     return bcryptjs.compare(password, passwordHash);
+  }
+
+  async sendVerificationEmail(user) {
+    const verificationLink = `${process.env.SERVER_URL}/auth/verify/${user.verificationToken}`;
+
+    await sgMail.send({
+      to: user.email,
+      from: process.env.SENDER_EMAIL,
+      subject: 'Please, verify your email!',
+      html: `<a href="${verificationLink}">Verify email</a>`,
+    });
   }
 
   createToken(uid) {

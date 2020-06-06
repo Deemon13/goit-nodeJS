@@ -19,4 +19,6 @@ router.post(
 
 router.patch('/logout', authController.authorize, authController.logoutUser);
 
+router.get('/verify/:verificationToken', authController.verifyUser);
+
 export const authRouter = router;

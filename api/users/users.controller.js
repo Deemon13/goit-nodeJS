@@ -1,4 +1,3 @@
-import { promises as fsPromises } from 'fs';
 import { createControllerProxy } from '../helpers/controllerProxy';
 import { userModel } from './users.model';
 import { UnauthorizedError } from '../helpers/error.constructors';
