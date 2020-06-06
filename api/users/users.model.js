@@ -3,7 +3,7 @@ import { uuid } from 'uuidv4';
 
 const { ObjectId } = mongoose.Types;
 
-const USER_STATUSES = {
+export const USER_STATUSES = {
   NOT_VERIFIED: 'NOT_VERIFIED',
   ACTIVE: 'ACTIVE',
 };

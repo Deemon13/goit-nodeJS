@@ -1,9 +1,9 @@
 import Joi from 'joi';
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 import { createControllerProxy } from '../helpers/controllerProxy';
-import { userModel } from '../users/users.model';
+import { userModel, USER_STATUSES } from '../users/users.model';
 import {
   ConflictError,
   UnauthorizedError,
@@ -13,6 +13,7 @@ import {
 class AuthController {
   constructor() {
     this._saltRounds = 5;
+    sgMail.setApiKey(process.env.SEND_GRID_API_KEY);
   }
 
   async registerUser(req, res, next) {
@@ -35,7 +36,7 @@ class AuthController {
         avatarURL,
       });
 
-      this.sendVerificationEmail(createdUser);
+      await this.sendVerificationEmail(createdUser);
 
       const token = this.createToken(createdUser._id);
       await userModel.updateUserById(createdUser._id, { token });
@@ -76,6 +77,11 @@ class AuthController {
       if (!existingUser) {
         throw new UnauthorizedError('Email is wrong');
       }
+
+      if (existingUser.status !== USER_STATUSES.ACTIVE) {
+        throw new UnauthorizedError('User not verified');
+      }
+
       const isPasswordCorrect = await this.comparePasswordsHash(
         password,
         existingUser.password,
@@ -166,16 +172,12 @@ class AuthController {
     return bcryptjs.compare(password, passwordHash);
   }
 
-  async sendVerificationEmail(userEmail, verificationToken) {
-    const verificationLink = `${process.env.SERVER_URL}/auth/verify/${verificationToken}`;
-    const transport = nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: process.env.MAIL_LOGIN, pass: process.env.MAIL_PASSWORD },
-    });
+  async sendVerificationEmail(user) {
+    const verificationLink = `${process.env.SERVER_URL}/auth/verify/${user.verificationToken}`;
 
-    const result = await transport.sendMail({
-      from: `${process.env.MAIL_LOGIN}@gmail.com`,
-      to: userEmail,
+    await sgMail.send({
+      to: user.email,
+      from: process.env.SENDER_EMAIL,
       subject: 'Please, verify your email!',
       html: `<a href="${verificationLink}">Verify email</a>`,
     });
